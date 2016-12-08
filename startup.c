@@ -2,9 +2,8 @@
  * 	startup.c
  *
  */
+#include "delay.h"
 #include "gpio.h"
-
-#define SIMULATOR 1
 
 void startup(void) __attribute__((naked)) __attribute__((section (".start_section")) );
 
@@ -17,10 +16,6 @@ asm volatile(
 	".L1: B .L1\n"				/* never return */
 	) ;
 }
-
-#define STK_CTRL ((volatile unsigned int *) (0xE000E010))
-#define STK_LOAD ((volatile unsigned int *) (0xE000E014))
-#define STK_VAL ((volatile unsigned int *) (0xE000E018))
 
 #define B_E 0x40 /* Enable */
 #define B_RST 0x20 /* Reset */
@@ -39,39 +34,6 @@ asm volatile(
 
 typedef unsigned char uint8;
 typedef enum { false, true } bool;
-
-void delay_250ns(void) {
-	*STK_CTRL = 0;
-	*STK_LOAD = ( (168/4) -1 );
-	*STK_VAL = 0;
-	*STK_CTRL = 5;
-	while( (*STK_CTRL & 0x10000) == 0 ) {
-	}
-	*STK_CTRL = 0;
-}
-
-void delay_500ns(void) {
-	delay_250ns();
-	delay_250ns();
-}
-
-void delay_micro(unsigned int us) {
-	while(us--) {
-		delay_250ns();
-		delay_250ns();
-		delay_250ns();
-		delay_250ns();
-	}
-}
-
-void delay_milli(unsigned int ms) {
-#ifndef SIMULATOR
-	while(ms--) {
-		delay_micro(1000);
-	}
-#endif
-}
-
 
 static void graphic_ctrl_bit_set( unsigned char x ){
 	portE.odrLow |= ( ~B_SELECT & x );
