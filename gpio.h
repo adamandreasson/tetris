@@ -22,4 +22,9 @@ typedef struct {
 	};
 } GPIO;
 
+extern GPIO portD;
+extern GPIO portE;
+
+void init_gpio(void);
+
 #endif // GPIO_H

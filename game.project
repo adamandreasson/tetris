@@ -120,6 +120,7 @@ monitor restart</PostConnectCommands>
   <VirtualDirectory Name="src">
     <File Name="startup.c"/>
     <File Name="gpio.h"/>
+    <File Name="gpio.c"/>
   </VirtualDirectory>
   <VirtualDirectory Name="resources">
     <File Name="md407-ram.x"/>

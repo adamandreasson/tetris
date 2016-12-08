@@ -2,10 +2,8 @@
  * 	startup.c
  *
  */
- 
- 
- #define SIMULATOR 1
- 
+#define SIMULATOR 1
+
 void startup(void) __attribute__((naked)) __attribute__((section (".start_section")) );
 
 void startup ( void )
@@ -21,7 +19,6 @@ asm volatile(
 #define STK_CTRL ((volatile unsigned int *) (0xE000E010))
 #define STK_LOAD ((volatile unsigned int *) (0xE000E014))
 #define STK_VAL ((volatile unsigned int *) (0xE000E018))
-
 
 #define B_E 0x40 /* Enable */
 #define B_RST 0x20 /* Reset */
@@ -63,7 +60,6 @@ void delay_250ns(void) {
 
 //maybe not so ghetto idk
 void delay_500ns(void) {
-
 	delay_250ns();
 	delay_250ns();
 }
@@ -78,14 +74,11 @@ void delay_micro(unsigned int us) {
 }
 
 void delay_milli(unsigned int ms) {
-#ifdef SIMULATOR
-	//delay_micro(1);
-	return 0;
-#endif
-	
+#ifndef SIMULATOR
 	while(ms--) {
 		delay_micro(1000);
 	}
+#endif
 }
 
 
@@ -375,4 +368,3 @@ int main(void){
 
 	return 0;
 }
-
