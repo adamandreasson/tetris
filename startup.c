@@ -2,6 +2,7 @@
  * 	startup.c
  *
  */
+#include "types.h"
 #include "delay.h"
 #include "gpio.h"
 
@@ -32,16 +33,13 @@ asm volatile(
 #define LCD_DISP_START 0xC0 /* Start adress i display minne */
 #define LCD_BUSY 0x80 /* läsa ut busy status. R/W skall vara hög */
 
-typedef unsigned char uint8;
-typedef enum { false, true } bool;
-
-static void graphic_ctrl_bit_set( unsigned char x ){
+static void graphic_ctrl_bit_set( uint8 x ){
 	portE.odrLow |= ( ~B_SELECT & x );
 }
-static void graphic_ctrl_bit_clear( unsigned char x ){
+static void graphic_ctrl_bit_clear( uint8 x ){
 	portE.odrLow &= ( ~B_SELECT & ~x );
 }
-static void select_controller(unsigned char controller){
+static void select_controller(uint8 controller){
 	
 	switch(controller){
 		case 0:
@@ -60,7 +58,7 @@ static void select_controller(unsigned char controller){
 }
 
 static void graphic_wait_ready(void){
-	unsigned char c;
+	uint8 c;
 	graphic_ctrl_bit_clear( B_E );
 	portE.moder = 0x00005555;
 	/* b15-8 are inputs,
@@ -81,8 +79,8 @@ static void graphic_wait_ready(void){
 	graphic_ctrl_bit_set( B_E );
 }
 
-static unsigned char display_read(unsigned char controller){
-	unsigned char c;
+static uint8 display_read(uint8 controller){
+	uint8 c;
 	portE.moder = 0x00005555;
 	/* b15-8 are inputs, 7-0 are outputs */
 	select_controller( controller );
@@ -109,12 +107,12 @@ static unsigned char display_read(unsigned char controller){
 }
 
 //read display twice because hardware is stupid
-static unsigned char graphic_read(unsigned char controller){
+static uint8 graphic_read(uint8 controller){
 	display_read(controller);
 	return display_read(controller);
 }
 
-static void graphic_write(unsigned char val, unsigned char controller){
+static void graphic_write(uint8 val, uint8 controller){
 	portE.odrHigh = val;
 	select_controller( controller );
 	delay_500ns();
@@ -134,13 +132,13 @@ static void graphic_write(unsigned char val, unsigned char controller){
 	select_controller( 0 );
 }
 
-static void graphic_writeCommand(unsigned char commandToWrite, unsigned char controller){
+static void graphic_writeCommand(uint8 commandToWrite, uint8 controller){
 	graphic_ctrl_bit_clear( B_E );
 	graphic_ctrl_bit_clear( B_DI | B_RW );
 	graphic_write(commandToWrite, controller);
 }
 
-static void graphic_writeData(unsigned char data, unsigned char controller){
+static void graphic_writeData(uint8 data, uint8 controller){
 	graphic_ctrl_bit_clear( B_E );
 	graphic_ctrl_bit_set( B_DI );
 	graphic_ctrl_bit_clear( B_RW );
@@ -162,7 +160,7 @@ void graphic_initalize(void){
 }
 
 void graphic_clearScreen(void){
-	unsigned char i, j;
+	uint8 i, j;
 	for(j = 0; j < 8; j++){
 		graphic_writeCommand(LCD_SET_PAGE | j, B_CS1|B_CS2 );
 		graphic_writeCommand(LCD_SET_ADD | 0, B_CS1|B_CS2 );
@@ -173,9 +171,9 @@ void graphic_clearScreen(void){
 }
 
 
-unsigned char frameBuffer0[1024], frameBuffer1[1024];		
-unsigned char *frontBuffer = frameBuffer0;	
-unsigned char *backBuffer =	frameBuffer1;
+uint8 frameBuffer0[1024], frameBuffer1[1024];		
+uint8 *frontBuffer = frameBuffer0;	
+uint8 *backBuffer =	frameBuffer1;
 
 void graphic_drawScreen(void){
     unsigned int k = 0;
@@ -201,7 +199,7 @@ void graphic_drawScreen(void){
 }
 
 
-void clearBuffer(unsigned char val){	
+void clearBuffer(uint8 val){	
 	for	(int i=0; i<1024; i++)	
 		backBuffer[i] =	val;	
 }
@@ -213,7 +211,7 @@ void clearBuffers()	{
 
 void swapBuffers()	{	
 	graphic_drawScreen();
-	unsigned char* tmp = frontBuffer;
+	uint8* tmp = frontBuffer;
 	frontBuffer	= backBuffer;	
 	backBuffer = tmp;
 }
@@ -223,7 +221,7 @@ void pixel(int x, int y, int set){
     if((x > 127) || (x < 0) || (y > 63) || (y < 0))
 		return;
 		
-    unsigned char mask = 1 << (y % 8);
+    uint8 mask = 1 << (y % 8);
     int index = 0;
     if(x >= 64) {
 		x -= 64;

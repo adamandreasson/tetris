@@ -1,6 +1,8 @@
 #ifndef GPIO_H
 #define GPIO_H
 
+#include "types.h"
+
 typedef struct {
 	unsigned int moder;
 	unsigned int otyper;
@@ -9,15 +11,15 @@ typedef struct {
 	union {
 		unsigned int idr;
 		struct {
-			unsigned char idrLow;
-			unsigned char idrHigh;
+			uint8 idrLow;
+			uint8 idrHigh;
 		};
 	};
 	union {
 		unsigned int odr;
 		struct {
-			unsigned char odrLow;
-			unsigned char odrHigh;
+			uint8 odrLow;
+			uint8 odrHigh;
 		};
 	};
 } GPIO;

@@ -122,6 +122,7 @@ monitor restart</PostConnectCommands>
     <File Name="gpio.h"/>
     <File Name="delay.h"/>
     <File Name="delay.c"/>
+    <File Name="types.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="resources">
     <File Name="md407-ram.x"/>
