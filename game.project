@@ -123,6 +123,8 @@ monitor restart</PostConnectCommands>
     <File Name="delay.h"/>
     <File Name="delay.c"/>
     <File Name="types.h"/>
+    <File Name="lcd.h"/>
+    <File Name="lcd.c"/>
   </VirtualDirectory>
   <VirtualDirectory Name="resources">
     <File Name="md407-ram.x"/>
