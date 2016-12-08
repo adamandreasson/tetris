@@ -2,6 +2,8 @@
  * 	startup.c
  *
  */
+#include "gpio.h"
+
 #define SIMULATOR 1
 
 void startup(void) __attribute__((naked)) __attribute__((section (".start_section")) );
@@ -35,17 +37,7 @@ asm volatile(
 #define LCD_DISP_START 0xC0 /* Start adress i display minne */
 #define LCD_BUSY 0x80 /* läsa ut busy status. R/W skall vara hög */
 
-#define PORT_DISPLAY_BASE 0x40021000 /* MD407 port E */
-#define portModer ((volatile unsigned int *) (PORT_DISPLAY_BASE))
-#define portOtyper ((volatile unsigned short *) (PORT_DISPLAY_BASE+0x4))
-#define portOspeedr ((volatile unsigned int *) (PORT_DISPLAY_BASE+0x8))
-#define portPupdr ((volatile unsigned int *) (PORT_DISPLAY_BASE+0xC))
-#define portIdr ((volatile unsigned short *) (PORT_DISPLAY_BASE+0x10))
-#define portIdrHigh ((volatile unsigned char *) (PORT_DISPLAY_BASE+0x11))
-#define portOdrLow ((volatile unsigned char *) (PORT_DISPLAY_BASE+0x14))
-#define portOdrHigh ((volatile unsigned char *) (PORT_DISPLAY_BASE+0x14+1))
-
-typedef unsigned char uint8;	
+typedef unsigned char uint8;
 typedef enum { false, true } bool;
 
 void delay_250ns(void) {
@@ -58,7 +50,6 @@ void delay_250ns(void) {
 	*STK_CTRL = 0;
 }
 
-//maybe not so ghetto idk
 void delay_500ns(void) {
 	delay_250ns();
 	delay_250ns();
@@ -83,10 +74,10 @@ void delay_milli(unsigned int ms) {
 
 
 static void graphic_ctrl_bit_set( unsigned char x ){
-	*portOdrLow |= ( ~B_SELECT & x );
+	portE.odrLow |= ( ~B_SELECT & x );
 }
 static void graphic_ctrl_bit_clear( unsigned char x ){
-	*portOdrLow &= ( ~B_SELECT & ~x );
+	portE.odrLow &= ( ~B_SELECT & ~x );
 }
 static void select_controller(unsigned char controller){
 	
@@ -109,7 +100,7 @@ static void select_controller(unsigned char controller){
 static void graphic_wait_ready(void){
 	unsigned char c;
 	graphic_ctrl_bit_clear( B_E );
-	*portModer = 0x00005555;
+	portE.moder = 0x00005555;
 	/* b15-8 are inputs,
 	b7-0 are outputs */
 	graphic_ctrl_bit_clear( B_DI );
@@ -118,19 +109,19 @@ static void graphic_wait_ready(void){
 	while(1){
 		graphic_ctrl_bit_set( B_E );
 		delay_500ns();
-		c = *portIdrHigh & 0x80;
+		c = portE.idrHigh & 0x80;
 		if( c == 0 )break;
 		graphic_ctrl_bit_clear( B_E );
 		delay_500ns();
 	}
-	*portModer = 0x55555555;
+	portE.moder = 0x55555555;
 	/* all bits outputs */
 	graphic_ctrl_bit_set( B_E );
 }
 
 static unsigned char display_read(unsigned char controller){
 	unsigned char c;
-	*portModer = 0x00005555;
+	portE.moder = 0x00005555;
 	/* b15-8 are inputs, 7-0 are outputs */
 	select_controller( controller );
 	graphic_ctrl_bit_clear( B_E );
@@ -138,9 +129,9 @@ static unsigned char display_read(unsigned char controller){
 	delay_500ns();
 	graphic_ctrl_bit_set( B_E );
 	delay_500ns();
-	c = *portIdrHigh;
+	c = portE.idrHigh;
 	graphic_ctrl_bit_clear( B_E );
-	*portModer = 0x55555555;
+	portE.moder = 0x55555555;
 	/* all bits outputs */
 	
 	if( controller & B_CS1 ){
@@ -162,7 +153,7 @@ static unsigned char graphic_read(unsigned char controller){
 }
 
 static void graphic_write(unsigned char val, unsigned char controller){
-	*portOdrHigh = val;
+	portE.odrHigh = val;
 	select_controller( controller );
 	delay_500ns();
 	graphic_ctrl_bit_set( B_E );
@@ -176,7 +167,7 @@ static void graphic_write(unsigned char val, unsigned char controller){
 		select_controller( B_CS2);
 		graphic_wait_ready();
 	}
-	*portOdrHigh = 0;
+	portE.odrHigh = 0;
 	graphic_ctrl_bit_set( B_E );
 	select_controller( 0 );
 }
@@ -282,10 +273,10 @@ void pixel(int x, int y, int set){
 
 void init_app(void){
 	/* PORT E */
-	*portModer = 0x55555555; /* all bits outputs */
-	*portOtyper = 0x00000000; /* outputs are push/pull */
-	*portOspeedr = 0x55555555; /* medium speed */
-	*portPupdr = 0x55550000; /* inputs are pull up */
+	portE.moder = 0x55555555; /* all bits outputs */
+	portE.otyper = 0x00000000; /* outputs are push/pull */
+	portE.ospeedr = 0x55555555; /* medium speed */
+	portE.pupdr = 0x55550000; /* inputs are pull up */
 }
 
 uint8 courtStartY = 3;
