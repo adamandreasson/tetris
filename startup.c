@@ -72,6 +72,7 @@ struct {
 	uint8 rotation;
 } piece;
 
+uint32 tick = 0;
 uint8 courtStartY = 3;
 uint8 courtStartX = 3;
 uint8 blockWidth = 4;
@@ -129,18 +130,18 @@ void drawBlocks() {
 }
 
 void drawPiece() {
-	uint8 row = 0, col = 0;
+	uint8 x = 0, y = 0;
 	uint16 blocks = types[piece.type][piece.rotation];
 	
 	// iterate over each block (bit) in the formation
 	for (uint16 bit = 0x8000; bit > 0; bit >>= 1) {
 		if (blocks & bit) {
-			drawBlock(piece.x + col, piece.y + row);
+			drawBlock(piece.x + x, piece.y + y);
 		}
 		
-		if (++col == 4) {
-			col = 0;
-			row++;
+		if (++x == 4) {
+			x = 0;
+			y++;
 		}
 	}
 }
@@ -155,28 +156,85 @@ void movePiece(uint8 dx, uint8 dy) {
 	piece.y = max(1, min(courtHeight, piece.y + dy));
 }
 
+bool hasLanded() {
+	uint8 x = 3, y = 3;
+	uint16 blocks = types[piece.type][piece.rotation];
+	
+	// get bottom y coordinate
+	for (uint16 bit = 0x0001; bit > 0; bit <<= 1) {
+		if (blocks & bit) {
+			break;
+		}
+		
+		if (x-- == 0) {
+			x = 3;
+			y--;
+		}
+	}
+	
+	if (piece.y + y == courtHeight) {
+		return true;
+	}
+	
+	x = 0;
+	y = 0;
+	
+	for (uint16 bit = 0x8000; bit > 0; bit >>= 1) {
+		if (blocks & bit) {
+			// check for block one step below
+			if (getBlock(piece.x + x, piece.y + y + 1)) {
+				return true;
+			}
+		}
+		
+		if (++x == 4) {
+			x = 0;
+			y++;
+		}
+	}
+	return false;
+}
+
+void spawnPiece() {
+	piece.type = i; // tick % TYPE_COUNT
+	piece.x = 3;
+	piece.y = 1;
+	piece.rotation = up;
+}
+
 int main(void) {
 	init_app();
 	graphic_initalize();
 	graphic_clear_screen();
 	clearBuffers();
 	
-	piece.type = i;
-	piece.x = 4;
-	piece.y = 1;
-	piece.rotation = up;
+	spawnPiece();
 	
 	while(1) {
+		// LOGIC
+		tick++;
+		
+		// move down once per second
+		if (tick /* % 10 == 0 */) {
+			movePiece(0, 1);
+		}
+		
+		if (hasLanded()) {
+			// TODO turn into solid blocks
+			
+			// new piece at the top
+			spawnPiece();
+		}
+		
+		// GRAPHICS
 		clearBuffer(0);
 		
 		drawCourt();
 		drawBlocks();
 		drawPiece();
 		
-		movePiece(0, 1);
-		rotatePiece();
-		
 		swapBuffers();
+		
 		delay_milli(50);
 	}
 
