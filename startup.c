@@ -10,6 +10,7 @@
 #include "delay.h"
 #include "gpio.h"
 #include "lcd.h"
+#include "keypad.h"
 
 #define min(a,b)	(((a)<(b)?(a):(b)))
 #define max(a,b)	(((a)>(b)?(a):(b)))
@@ -31,9 +32,14 @@ uint8 *frontBuffer = frameBuffer0;
 uint8 *backBuffer =	frameBuffer1;
 
 void init_app(void) {
+	/* PORT D */
+	portD.moder = 0x00005500; // D0-3 inputs, D4-7 outputs
+	portD.otyper = 0x000F; // D0-3 open drain, D4-7 push-pull
+	portD.pupdr = 0x000000AA; // D0-3 pull-down, D4-7 floating
+	
 	/* PORT E */
 	portE.moder = 0x55555555; /* all bits outputs */
-	portE.otyper = 0x00000000; /* outputs are push/pull */
+	portE.otyper = 0x0000; /* outputs are push/pull */
 	portE.ospeedr = 0x55555555; /* medium speed */
 	portE.pupdr = 0x55550000; /* inputs are pull up */
 }
@@ -83,23 +89,23 @@ void setBlock(uint8 x, uint8 y, bool set) {
 void drawCourt() {
 	
 	uint8 y = courtStartY-2;
-	for(uint8 x = courtStartX-2; x < courtStartX+blockWidth*courtWidth; x++){
+	for(uint8 x = courtStartX-2; x < courtStartX+blockWidth*courtWidth; x++) {
 		pixel(x, y, 1);
 	}
 	
 	y = courtStartY + blockWidth*courtHeight;
-	for(uint8 x = courtStartX-2; x < courtStartX+blockWidth*courtWidth; x++){
+	for(uint8 x = courtStartX-2; x < courtStartX+blockWidth*courtWidth; x++) {
 		pixel(x, y, 1);
 	}
 	
 	
 	uint8 x = courtStartX-2;
-	for(uint8 y = courtStartY-2; y < courtStartY+blockWidth*courtHeight; y++){
+	for(uint8 y = courtStartY-2; y < courtStartY+blockWidth*courtHeight; y++) {
 		pixel(x, y, 1);
 	}
 	
 	x = courtStartX + blockWidth*courtWidth;
-	for(uint8 y = courtStartY-2; y < courtStartY+blockWidth*courtHeight; y++){
+	for(uint8 y = courtStartY-2; y < courtStartY+blockWidth*courtHeight; y++) {
 		pixel(x, y, 1);
 	}
 	
@@ -160,7 +166,7 @@ int main(void) {
 	piece.y = 1;
 	piece.rotation = up;
 	
-	while(1){
+	while(1) {
 		clearBuffer(0);
 		
 		drawCourt();

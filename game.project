@@ -125,6 +125,8 @@ monitor restart</PostConnectCommands>
     <File Name="types.h"/>
     <File Name="lcd.h"/>
     <File Name="lcd.c"/>
+    <File Name="keypad.c"/>
+    <File Name="keypad.h"/>
   </VirtualDirectory>
   <VirtualDirectory Name="resources">
     <File Name="md407-ram.x"/>
