@@ -175,7 +175,7 @@ bool hasLanded() {
 		}
 	}
 	
-	if (piece.y + y == courtHeight) {
+	if (piece.y + y +1 == courtHeight) {
 		return true;
 	}
 	
@@ -213,6 +213,24 @@ void spawnPiece() {
 	piece.rotation = up;
 }
 
+void addPieceToBlocks(){
+	
+	uint16 pBlocks = types[piece.type][piece.rotation];
+	uint8 x = 0, y = 0;
+	//loop thru piece matrix
+	for (uint16 bit = 0x8000; bit > 0; bit >>= 1) {
+		if (pBlocks & bit) {
+			// add block to board matrix
+			setBlock(piece.x + x, piece.y + y, 1);
+		}
+		
+		if (++x == 4) {
+			x = 0;
+			y++;
+		}
+	}
+}
+
 int main(void) {
 	init_app();
 	graphic_initalize();
@@ -239,12 +257,13 @@ int main(void) {
 		}		
 		
 		// move down once per second
-		if (!modulo(tick, 10)) {
+		if (!modulo(tick, 2)) {
 			movePiece(0, 1);
 		}
 		
 		if (hasLanded()) {
 			// TODO turn into solid blocks
+			addPieceToBlocks();
 			
 			// new piece at the top
 			spawnPiece();
