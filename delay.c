@@ -7,7 +7,11 @@
 
 void delay_250ns(void) {
 	*STK_CTRL = 0;
+#ifdef SIMULATOR
+	*STK_LOAD = 16/4 - 1;
+#else
 	*STK_LOAD = 168/4 - 1;
+#endif
 	*STK_VAL = 0;
 	*STK_CTRL = 5;
 	while ((*STK_CTRL & 0x10000) == 0);

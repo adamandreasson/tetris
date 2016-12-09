@@ -202,6 +202,14 @@ void spawnPiece() {
 	piece.rotation = up;
 }
 
+int modulo(int x, int y) {
+    int result = x;   
+    while (result >= y)
+        result -= y;
+
+    return result;
+}
+
 int main(void) {
 	init_app();
 	graphic_initalize();
@@ -215,7 +223,7 @@ int main(void) {
 		tick++;
 		
 		// move down once per second
-		if (tick /* % 10 == 0 */) {
+		if (!modulo(tick, 10)) {
 			movePiece(0, 1);
 		}
 		
