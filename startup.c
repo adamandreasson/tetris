@@ -73,15 +73,16 @@ struct {
 } piece;
 
 uint32 tick = 0;
-uint8 courtStartY = 3;
+uint8 courtStartY = 2;
 uint8 courtStartX = 3;
 uint8 blockWidth = 4;
 uint8 courtWidth = 10;
-uint8 courtHeight = 14;
+uint8 courtHeight = 20;
 
 uint8 userInput = 0;
+Type nextPiece = 3;
 
-bool blocks[10][14];
+bool blocks[10][20];
 
 bool getBlock(uint8 x, uint8 y) {
 	return blocks[x][y];
@@ -90,28 +91,31 @@ void setBlock(uint8 x, uint8 y, bool set) {
 	blocks[x][y] = set;
 }
 
-void drawCourt() {
+void drawRectangle(uint8 x, uint8 y, uint8 width, uint8 height){
 	
-	uint8 y = courtStartY-2;
-	for(uint8 x = courtStartX-2; x < courtStartX+blockWidth*courtWidth; x++) {
-		pixel(x, y, 1);
+	for(uint8 dx = 0; dx < width; dx++) {
+		pixel(x + dx, y, 1);
 	}
 	
-	y = courtStartY + blockWidth*courtHeight;
-	for(uint8 x = courtStartX-2; x < courtStartX+blockWidth*courtWidth; x++) {
-		pixel(x, y, 1);
+	for(uint8 dx = 0; dx < width; dx++) {
+		pixel(x + dx, y + height, 1);
 	}
 	
-	
-	uint8 x = courtStartX-2;
-	for(uint8 y = courtStartY-2; y < courtStartY+blockWidth*courtHeight; y++) {
-		pixel(x, y, 1);
+	for(uint8 dy = 0; dy < height; dy++) {
+		pixel(x, y + dy, 1);
 	}
 	
-	x = courtStartX + blockWidth*courtWidth;
-	for(uint8 y = courtStartY-2; y < courtStartY+blockWidth*courtHeight; y++) {
-		pixel(x, y, 1);
+	for(uint8 dy = 0; dy < height; dy++) {
+		pixel(x + width, y + dy, 1);
 	}
+	
+}
+
+void drawUI() {
+	
+	drawRectangle(courtStartX-2, courtStartY-2, blockWidth*courtWidth + 2, blockWidth*courtHeight + 2);
+	
+	drawRectangle(blockWidth*courtWidth + 3, 4, 21, 21);
 	
 }
 
@@ -128,6 +132,25 @@ void drawBlocks() {
 		for(uint8 x = 0; x < courtWidth; x++){
 			if(blocks[x][y])
 				drawBlock(x,y);
+		}
+	}
+}
+
+void drawNextPiece() {
+	uint8 startX = courtWidth+1, startY = 2;
+	uint16 blocks = types[nextPiece][up];
+	//uint16 blocks = 0x6C00;
+	uint8 x = 0, y = 0;
+	
+	// iterate over each block (bit) in the formation
+	for (uint16 bit = 0x8000; bit > 0; bit >>= 1) {
+		if (blocks & bit) {
+			drawBlock(startX + x, startY + y);
+		}
+		
+		if (++x == 4) {
+			x = 0;
+			y++;
 		}
 	}
 }
@@ -155,7 +178,7 @@ void rotatePiece() {
 }
 
 void movePiece(int8 dx, int8 dy) {
-	piece.x = max(1, min(courtWidth, piece.x + dx));
+	piece.x = max(0, min(courtWidth, piece.x + dx));
 	piece.y = max(1, min(courtHeight, piece.y + dy));
 }
 
@@ -175,7 +198,7 @@ bool hasLanded() {
 		}
 	}
 	
-	if (piece.y + y +1 == courtHeight) {
+	if (piece.y + y + 1 == courtHeight) {
 		return true;
 	}
 	
@@ -207,10 +230,12 @@ int modulo(int x, int y) {
 }
 
 void spawnPiece() {
-	piece.type = modulo(tick, TYPE_COUNT); // tick % TYPE_COUNT
+	piece.type = nextPiece;
 	piece.x = 3;
-	piece.y = 1;
+	piece.y = 0;
 	piece.rotation = up;
+	
+	nextPiece = modulo(tick, TYPE_COUNT);
 }
 
 void addPieceToBlocks(){
@@ -229,6 +254,32 @@ void addPieceToBlocks(){
 			y++;
 		}
 	}
+}
+
+void resetGame(){
+	for(uint8 y=0; y<courtHeight;y++){
+		for(uint8 x=0; x<courtHeight;x++){
+			setBlock(x,y,0);
+		}
+	}
+}
+
+void dropPiece(){
+	
+		movePiece(0, 1);
+		if (hasLanded()) {
+			
+			if(piece.y < 3){
+				resetGame();
+				return;
+			}
+			
+			// TODO turn into solid blocks
+			addPieceToBlocks();
+			
+			// new piece at the top
+			spawnPiece();
+		}
 }
 
 int main(void) {
@@ -254,25 +305,21 @@ int main(void) {
 				break;
 			case 6:
 				movePiece(1, 0);
+				break;
+			case 8:
+				dropPiece();
 		}		
-		
+	
 		// move down once per second
 		if (!modulo(tick, 2)) {
-			movePiece(0, 1);
-		}
-		
-		if (hasLanded()) {
-			// TODO turn into solid blocks
-			addPieceToBlocks();
-			
-			// new piece at the top
-			spawnPiece();
+			dropPiece();
 		}
 		
 		// GRAPHICS
 		clearBuffer(0);
 		
-		drawCourt();
+		drawUI();
+		drawNextPiece();
 		drawBlocks();
 		drawPiece();
 		

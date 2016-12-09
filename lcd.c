@@ -15,6 +15,8 @@
 #define LCD_DISP_START 0xC0 /* Start adress i display minne */
 #define LCD_BUSY 0x80 /* läsa ut busy status. R/W skall vara hög */
 
+#define VERTICALSCREEN
+
 void graphic_ctrl_bit_set( uint8 x ) {
 	portE.odrLow |= ( ~B_SELECT & x );
 }
@@ -194,6 +196,12 @@ void swapBuffers(void) {
 void pixel(int x, int y, int set) {
     if(!set)
 		return;
+#ifdef VERTICALSCREEN
+	int temp = y;
+	y = 64-x;
+	x = temp;
+#endif
+		
     if((x > 127) || (x < 0) || (y > 63) || (y < 0))
 		return;
 	
