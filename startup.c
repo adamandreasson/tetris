@@ -33,9 +33,9 @@ uint8 *backBuffer =	frameBuffer1;
 
 void init_app(void) {
 	/* PORT D */
-	portD.moder = 0x00005500; // D0-3 inputs, D4-7 outputs
-	portD.otyper = 0x000F; // D0-3 open drain, D4-7 push-pull
-	portD.pupdr = 0x000000AA; // D0-3 pull-down, D4-7 floating
+	portD.moder = 0x55005555; // D0-3 inputs, D4-7 outputs
+	portD.otyper = 0x0F00; // D0-3 open drain, D4-7 push-pull
+	portD.pupdr = 0x00AA0000; // D0-3 pull-down, D4-7 floating
 	
 	/* PORT E */
 	portE.moder = 0x55555555; /* all bits outputs */
@@ -77,8 +77,11 @@ uint8 courtStartY = 3;
 uint8 courtStartX = 3;
 uint8 blockWidth = 4;
 uint8 courtWidth = 10;
-uint8 courtHeight = 20;
-bool blocks[10][20];
+uint8 courtHeight = 14;
+
+uint8 userInput = 0;
+
+bool blocks[10][14];
 
 bool getBlock(uint8 x, uint8 y) {
 	return blocks[x][y];
@@ -151,7 +154,7 @@ void rotatePiece() {
 	piece.rotation = piece.rotation + 1 == ROTATION_COUNT ? 0 : piece.rotation + 1;
 }
 
-void movePiece(uint8 dx, uint8 dy) {
+void movePiece(int8 dx, int8 dy) {
 	piece.x = max(1, min(courtWidth, piece.x + dx));
 	piece.y = max(1, min(courtHeight, piece.y + dy));
 }
@@ -195,19 +198,19 @@ bool hasLanded() {
 	return false;
 }
 
-void spawnPiece() {
-	piece.type = i; // tick % TYPE_COUNT
-	piece.x = 3;
-	piece.y = 1;
-	piece.rotation = up;
-}
-
 int modulo(int x, int y) {
     int result = x;   
     while (result >= y)
         result -= y;
 
     return result;
+}
+
+void spawnPiece() {
+	piece.type = modulo(tick, TYPE_COUNT); // tick % TYPE_COUNT
+	piece.x = 3;
+	piece.y = 1;
+	piece.rotation = up;
 }
 
 int main(void) {
@@ -221,6 +224,19 @@ int main(void) {
 	while(1) {
 		// LOGIC
 		tick++;
+		
+		userInput = keyb();
+
+		switch(userInput){
+			case 2:
+				rotatePiece();
+				break;
+			case 4:
+				movePiece(-1, 0);
+				break;
+			case 6:
+				movePiece(1, 0);
+		}		
 		
 		// move down once per second
 		if (!modulo(tick, 10)) {
