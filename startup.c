@@ -1,7 +1,7 @@
 /*
  * Tetris game lul
  * 
- * GPIO D0-7: Keypad
+ * GPIO D8-15: Keypad
  * GPIO E: LCD display
  * 
 */
@@ -77,14 +77,17 @@ uint8 courtStartY = 2;
 uint8 courtStartX = 3;
 uint8 blockWidth = 4;
 uint8 courtWidth = 10;
-uint8 courtHeight = 20;
+uint8 courtHeight = 14;
 
 uint8 userInput = 0;
 Type nextPiece = 3;
 
-bool blocks[10][20];
+bool blocks[10][14];
 
-bool getBlock(uint8 x, uint8 y) {
+bool getBlock(int8 x, int8 y) {
+	if(x < 0 || x >= courtWidth || y < 0 || y > courtHeight)
+		return true;
+		
 	return blocks[x][y];
 }
 void setBlock(uint8 x, uint8 y, bool set) {
@@ -177,7 +180,33 @@ void rotatePiece() {
 	piece.rotation = piece.rotation + 1 == ROTATION_COUNT ? 0 : piece.rotation + 1;
 }
 
+bool canMove(int8 dx, int8 dy){
+	uint8 x = 0, y = 0;
+	uint16 blocks = types[piece.type][piece.rotation];
+	
+	//loop through individual blocks in the piece
+	for (uint16 bit = 0x8000; bit > 0; bit >>= 1) {
+		
+		//if theres a block at this position, check if there is one next to it on the map
+		if (blocks & bit) {
+			if (getBlock(piece.x + dx + x, piece.y + dy + y)) {
+				return false; //the piece cannot move in this direction
+			}
+		}
+		
+		if (++x == 4) {
+			x = 0;
+			y++;
+		}
+	}
+	
+	return true;
+}
+
 void movePiece(int8 dx, int8 dy) {
+	if(!canMove(dx, dy))
+		return;
+	
 	piece.x = max(0, min(courtWidth, piece.x + dx));
 	piece.y = max(1, min(courtHeight, piece.y + dy));
 }

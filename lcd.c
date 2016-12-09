@@ -15,7 +15,7 @@
 #define LCD_DISP_START 0xC0 /* Start adress i display minne */
 #define LCD_BUSY 0x80 /* läsa ut busy status. R/W skall vara hög */
 
-#define VERTICALSCREEN
+//#define VERTICALSCREEN
 
 void graphic_ctrl_bit_set( uint8 x ) {
 	portE.odrLow |= ( ~B_SELECT & x );
