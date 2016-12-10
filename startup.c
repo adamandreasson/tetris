@@ -67,7 +67,7 @@ const uint8 ROTATION_COUNT = 4;
 
 struct {
 	Type type;
-	uint8 x;
+	int8 x;
 	uint8 y;
 	uint8 rotation;
 } piece;
@@ -175,9 +175,42 @@ void drawPiece() {
 	}
 }
 
+int modulo(int x, int y) {
+    int result = x;   
+    while (result >= y)
+        result -= y;
+
+    return result;
+}
+
+bool canRotate() {
+	uint8 x = 0, y = 0;
+	uint16 blocks = types[piece.type][modulo(piece.rotation + 1, ROTATION_COUNT)];
+	
+	for (uint16 bit = 0x8000; bit > 0; bit >>= 1) {
+		if (blocks & bit) {
+			if (getBlock(piece.x + x, piece.y + y)) {
+				return false;
+			}
+			if (piece.x + x < 0 || piece.x + x > courtWidth) {
+				return false;
+			}
+		}
+		
+		if (++x == 4) {
+			x = 0;
+			y++;
+		}
+	}
+	
+	return true;
+}
+
 void rotatePiece() {
-	// % operator doesn't work here for whatever reason
-	piece.rotation = piece.rotation + 1 == ROTATION_COUNT ? 0 : piece.rotation + 1;
+	if (!canRotate())
+		return;
+	
+	piece.rotation = modulo(piece.rotation + 1, ROTATION_COUNT);
 }
 
 bool canMove(int8 dx, int8 dy){
@@ -191,6 +224,9 @@ bool canMove(int8 dx, int8 dy){
 		if (blocks & bit) {
 			if (getBlock(piece.x + dx + x, piece.y + dy + y)) {
 				return false; //the piece cannot move in this direction
+			}
+			if (piece.x + dx + x < 0 || piece.x + dx + x > courtWidth) {
+				return false;
 			}
 		}
 		
@@ -207,8 +243,8 @@ void movePiece(int8 dx, int8 dy) {
 	if(!canMove(dx, dy))
 		return;
 	
-	piece.x = max(0, min(courtWidth, piece.x + dx));
-	piece.y = max(1, min(courtHeight, piece.y + dy));
+	piece.x = piece.x + dx;
+	piece.y = piece.y + dy;
 }
 
 bool hasLanded() {
@@ -248,14 +284,6 @@ bool hasLanded() {
 		}
 	}
 	return false;
-}
-
-int modulo(int x, int y) {
-    int result = x;   
-    while (result >= y)
-        result -= y;
-
-    return result;
 }
 
 void spawnPiece() {
