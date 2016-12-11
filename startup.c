@@ -368,9 +368,23 @@ void dropPiece(){
 
 int main(void) {
 	init_app();
+	
 	graphic_initialize();
 	graphic_clear_screen();
 	clearBuffers();
+	
+	ascii_init();
+	ascii_gotoxy(1, 1);
+	ascii_write_string("Let's Play Tetris");
+	ascii_gotoxy(2, 1);
+	ascii_write_string("Press A to   start");
+	
+	do {
+		userInput = keyb();
+	} while (userInput != 0xA);
+	
+	ascii_gotoxy(2, 12);
+	ascii_write_string("re");
 	
 	spawnPiece();
 	
