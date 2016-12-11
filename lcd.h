@@ -53,6 +53,8 @@ void ascii_write_controller(uint8 c);
 
 void ascii_write_cmd(uint8 command);
 
+void ascii_command(uint8 command, uint32 microDelay);
+
 void ascii_write_data(uint8 data);
 
 void ascii_init(void);

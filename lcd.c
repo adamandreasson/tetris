@@ -269,6 +269,13 @@ void ascii_write_cmd(uint8 command) {
 	ascii_write_controller(command);
 }
 
+void ascii_command(uint8 command, uint32 microDelay) {
+	while (ascii_read_status() & LCD_BUSY);
+	delay_micro(8);
+	ascii_write_cmd(command);
+	delay_micro(microDelay);
+}
+
 void ascii_write_data(uint8 data) {
 	// RS = 1, RW = 0
 	ascii_ctrl_bit_set(0x1);
@@ -277,10 +284,10 @@ void ascii_write_data(uint8 data) {
 }
 
 void ascii_init(void) {
-	ascii_write_cmd(0x38);	// 2 rader, 5x8 punkters tecken
-	ascii_write_cmd(0x0E);	// tänd display, tänd markör, konstant visning
-	ascii_write_cmd(0x04);	// adressering med increment, inget skift av adressbufferten
-	ascii_write_cmd(0x01);	// clear display
+	ascii_command(0x38, 40);	// 2 rader, 5x8 punkters tecken
+	ascii_command(0x0E, 40);	// tänd display, tänd markör, konstant visning
+	ascii_command(0x04, 40);	// adressering med increment, inget skift av adressbufferten
+	ascii_command(0x01, 1540);	// clear display
 }
 
 void ascii_gotoxy(int row, int column) {
@@ -288,11 +295,11 @@ void ascii_gotoxy(int row, int column) {
 	if (row == 2) {
 		address += 0x40;
 	}
-	ascii_write_cmd(0x80 | address);
+	ascii_command(0x80 | address, 40);
 }
 
 void ascii_write_char(char c) {
-	while( (ascii_read_status() & 0x80) == 0x80 ){}
+	while (ascii_read_status() & LCD_BUSY);
 	delay_micro(8); //latenstid för kommando
 	ascii_write_data(c);
 	delay_micro(44);
