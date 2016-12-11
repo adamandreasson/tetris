@@ -313,6 +313,31 @@ void addPieceToBlocks(){
 	}
 }
 
+bool hasFullRow(uint8 row) {
+	for (uint8 x = 0; x < courtWidth; x++) {
+		if (!getBlock(x, row)) {
+			return false;
+		}
+	}
+	return true;
+}
+
+void removeRow(uint8 row) {
+	for (uint8 y = row; y > 0; y--) {
+		for (uint8 x = 0; x < courtWidth; x++) {
+			setBlock(x, y, getBlock(x, y - 1));
+		}
+	}
+}
+
+void removeFullRows() {
+	for (uint8 row = 0; row < courtHeight; row++) {
+		if (hasFullRow(row)) {
+			removeRow(row);
+		}
+	}
+}
+
 void resetGame(){
 	for(uint8 y=0; y<courtHeight;y++){
 		for(uint8 x=0; x<courtHeight;x++){
@@ -331,8 +356,10 @@ void dropPiece(){
 				return;
 			}
 			
-			// TODO turn into solid blocks
+			// turn into solid blocks
 			addPieceToBlocks();
+			
+			removeFullRows();
 			
 			// new piece at the top
 			spawnPiece();
