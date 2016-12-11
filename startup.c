@@ -406,8 +406,12 @@ int main(void) {
 				break;
 			case 8:
 				dropPiece();
-		}		
-	
+				break;
+			case 0xA:
+				resetGame();
+				spawnPiece();
+		}
+		
 		// move down once per second
 		if (!modulo(tick, 2)) {
 			dropPiece();
