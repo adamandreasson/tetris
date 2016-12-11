@@ -368,7 +368,7 @@ void dropPiece(){
 
 int main(void) {
 	init_app();
-	graphic_initalize();
+	graphic_initialize();
 	graphic_clear_screen();
 	clearBuffers();
 	

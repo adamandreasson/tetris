@@ -129,7 +129,7 @@ void graphic_write_data(uint8 data, uint8 controller) {
 	graphic_write(data, controller);
 }
 
-void graphic_initalize(void) {
+void graphic_initialize(void) {
 	graphic_ctrl_bit_set( B_E );
 	delay_micro(10);
 	graphic_ctrl_bit_clear(B_CS1|B_CS2|B_RST|B_E);
@@ -213,4 +213,93 @@ void pixel(int x, int y, int set) {
     }
     index += x + (y / 8) * 64;
     backBuffer[index] |= mask;
+}
+
+void ascii_ctrl_bit_set(uint8 x) {
+	/*Funktion för att 1-ställa bitar */
+	uint8 c = portE.odrLow;
+	c |= (B_SELECT | x);
+	portE.odrLow = c;
+}
+
+void ascii_ctrl_bit_clear(uint8 x) {
+	uint8 c;
+	c = portE.odrLow;
+	c = B_SELECT | (c & ~x);
+	portE.odrLow = c;
+}
+
+uint8 ascii_read_controller(void) {
+	ascii_ctrl_bit_set(B_E);
+	delay_250ns();
+	delay_250ns();
+	uint8 c = portE.idrHigh;
+	ascii_ctrl_bit_clear(B_E);
+	return c;
+}
+
+uint8 ascii_read_status(void) {
+	portE.moder &= 0x0000FFFF;
+	ascii_ctrl_bit_set(0x2);
+	ascii_ctrl_bit_clear(0x1);
+	uint8 c = ascii_read_controller();
+	portE.moder |= 0x55550000;
+	return c;
+}
+
+uint8 ascii_read_data(void) {
+	//RS och RW till 1
+	portE.moder &= 0x0000FFFF;
+	ascii_ctrl_bit_set(0x3);
+	uint8 c = ascii_read_controller();
+	portE.moder |= 0x55550000;
+	return c;
+}
+
+void ascii_write_controller(uint8 c) {
+	ascii_ctrl_bit_set(B_E);
+	portE.odrHigh = c;
+	ascii_ctrl_bit_clear(B_E);
+	delay_250ns();
+}
+
+void ascii_write_cmd(uint8 command) {
+	// sätt RS och RW till 0.
+	ascii_ctrl_bit_clear(0x3);
+	ascii_write_controller(command);
+}
+
+void ascii_write_data(uint8 data) {
+	// RS = 1, RW = 0
+	ascii_ctrl_bit_set(0x1);
+	ascii_ctrl_bit_clear(0x2);
+	ascii_write_controller(data);
+}
+
+void ascii_init(void) {
+	ascii_write_cmd(0x38);	// 2 rader, 5x8 punkters tecken
+	ascii_write_cmd(0x0E);	// tänd display, tänd markör, konstant visning
+	ascii_write_cmd(0x04);	// adressering med increment, inget skift av adressbufferten
+	ascii_write_cmd(0x01);	// clear display
+}
+
+void ascii_gotoxy(int row, int column) {
+	uint8 address = column - 1;
+	if (row == 2) {
+		address += 0x40;
+	}
+	ascii_write_cmd(0x80 | address);
+}
+
+void ascii_write_char(char c) {
+	while( (ascii_read_status() & 0x80) == 0x80 ){}
+	delay_micro(8); //latenstid för kommando
+	ascii_write_data(c);
+	delay_micro(44);
+}
+
+void ascii_write_string(char *str) {
+	while (*str) {
+		ascii_write_char(*str++);
+	}
 }
