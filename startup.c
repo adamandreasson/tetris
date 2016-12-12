@@ -44,6 +44,8 @@ void init_app(void) {
 	portE.pupdr = 0x55550000; /* inputs are pull up */
 }
 
+uint16 font[10] = {0xF99F, 0xC44E, 0xF24F, 0xF71F, 0x99F1, 0xF8F7, 0x8F9F, 0xF111, 0xEBD7, 0xF9F1};
+
 typedef enum { i, j, l, o, s, t, z } Type;
 const uint8 TYPE_COUNT = 7;
 
@@ -116,11 +118,31 @@ void drawRectangle(uint8 x, uint8 y, uint8 width, uint8 height){
 	
 }
 
+void drawNumber(uint8 startX, uint8 startY, uint8 number){
+	uint16 blocks = font[number];
+	uint8 x = 0, y = 0;
+	
+	for (uint16 bit = 0x8000; bit > 0; bit >>= 1) {
+		if (blocks & bit) {
+			pixel(startX + x, startY + y, 1);
+		}
+		
+		if (++x == 4) {
+			x = 0;
+			y++;
+		}
+	}
+}
+
 void drawUI() {
 	
 	drawRectangle(courtStartX-2, courtStartY-2, blockWidth*courtWidth + 2, blockWidth*courtHeight + 2);
 	
 	drawRectangle(blockWidth*courtWidth + 3, 4, 21, 21);
+	
+	if(((uint8)score[0])-48)
+		drawNumber(blockWidth*courtWidth + 8, 32, ((uint8)score[0])-48);
+	drawNumber(blockWidth*courtWidth + 13, 32, ((uint8)score[1])-48);
 	
 }
 
@@ -332,11 +354,30 @@ void removeRow(uint8 row) {
 	}
 }
 
+void addScore(uint8 scr);
+void incScore();
+
 void removeFullRows() {
+	uint8 removedCount = 0;
 	for (uint8 row = 0; row < courtHeight; row++) {
 		if (hasFullRow(row)) {
 			removeRow(row);
+			removedCount++;
 		}
+	}
+	switch(removedCount){
+		case 1:
+			addScore(10);
+			break;
+		case 2:
+			addScore(20);
+			break;
+		case 3:
+			addScore(40);
+			break;
+		case 4:
+			addScore(80);
+			break;
 	}
 }
 
@@ -346,6 +387,12 @@ void resetGame(){
 			setBlock(x,y,0);
 		}
 	}
+	resetScore();
+}
+
+void addScore(uint8 scr){
+	for(uint8 i = 0; i<scr; i++)
+		incScore();
 }
 
 void incScore() {
@@ -435,7 +482,6 @@ int main(void) {
 				break;
 			case 0xA:
 				resetGame();
-				resetScore();
 				spawnPiece();
 		}
 		
