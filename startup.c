@@ -82,6 +82,8 @@ uint8 courtHeight = 14;
 uint8 userInput = 0;
 Type nextPiece = 3;
 
+char score[] = "00";
+
 bool blocks[10][14];
 
 bool getBlock(int8 x, int8 y) {
@@ -346,6 +348,25 @@ void resetGame(){
 	}
 }
 
+void incScore() {
+	score[1]++;
+	if (score[1] > '9') {
+		score[1] = '0';
+		score[0]++;
+		// this probably won't go over 99
+	}
+}
+
+void resetScore() {
+	score[0] = '0';
+	score[1] = '0';
+}
+
+void printScore() {
+	ascii_gotoxy(1, 8);
+	ascii_write_string(score);
+}
+
 void dropPiece(){
 	
 		movePiece(0, 1);
@@ -363,6 +384,8 @@ void dropPiece(){
 			
 			// new piece at the top
 			spawnPiece();
+			
+			incScore();
 		}
 }
 
@@ -383,6 +406,9 @@ int main(void) {
 		userInput = keyb();
 	} while (userInput != 0xA);
 	
+	
+	ascii_gotoxy(1, 1);
+	ascii_write_string("Score: 00        ");
 	ascii_gotoxy(2, 12);
 	ascii_write_string("re");
 	
@@ -409,6 +435,7 @@ int main(void) {
 				break;
 			case 0xA:
 				resetGame();
+				resetScore();
 				spawnPiece();
 		}
 		
@@ -426,6 +453,8 @@ int main(void) {
 		drawPiece();
 		
 		swapBuffers();
+		
+		printScore();
 		
 		delay_milli(50);
 	}
