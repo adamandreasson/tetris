@@ -381,6 +381,8 @@ void removeFullRows() {
 	}
 }
 
+void resetScore();
+
 void resetGame(){
 	for(uint8 y=0; y<courtHeight;y++){
 		for(uint8 x=0; x<courtHeight;x++){
