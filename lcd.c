@@ -166,8 +166,9 @@ void graphic_draw_screen(void) {
 			for(uint8 i = 0; i <= 63; i++, k++) { //	loop	over	addresses
 			//	update	display	only	where	it	is	different	from	last	frame
 			if(backBuffer[k] != frontBuffer[k]) {
+				graphic_write_command(LCD_ON, controller); // display shuts down for unknown reason
 				if(bUpdateAddr)
-				graphic_write_command(LCD_SET_ADD | i, controller);
+					graphic_write_command(LCD_SET_ADD | i, controller);
 				graphic_write_data(backBuffer[k], controller);
 				bUpdateAddr = false; //	Display	hardware	auto-increments	the	address	per	write
 			} else
